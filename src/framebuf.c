@@ -40,7 +40,7 @@ void fb_pattern(struct limine_framebuffer *fb, uint64_t delta_cycles, uint64_t t
     }
 
     
-    uint64_t frame_duration_cycles = (uint64_t)frame[0] * tsc_freq / 1000;
+    uint64_t frame_duration_cycles = tsc_freq ? (uint64_t)frame[0] * tsc_freq / 1000 : 33000000;
 
     
     int frame_advanced = 0;

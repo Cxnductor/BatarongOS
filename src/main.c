@@ -8,25 +8,19 @@
 #include "keyboard.h"
 
 __attribute__((used, section(".limine_requests")))
-static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
+static volatile uint64_t limine_base_revision[] = { 0xf9562b2d5c95a6c8, 0x6a7b384944536bdc, 6 };
 
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_framebuffer_request framebuffer_request = {
-    .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
-    .revision = 0
-};
-
-__attribute__((used, section(".limine_requests")))
-static volatile struct limine_tsc_frequency_request tsc_request = {
-    .id = LIMINE_TSC_FREQUENCY_REQUEST_ID,
+    .id = LIMINE_FRAMEBUFFER_REQUEST,
     .revision = 0
 };
 
 __attribute__((used, section(".limine_requests_start")))
-static volatile uint64_t limine_requests_start_marker[] = LIMINE_REQUESTS_START_MARKER;
+static volatile uint64_t limine_requests_start_marker[] = { 0xf6b8f4b39de7d1ae, 0xfab91a6940fcb9cf, 0x785c6ed015d3e316, 0x181e920a7852b9d9 };
 
 __attribute__((used, section(".limine_requests_end")))
-static volatile uint64_t limine_requests_end_marker[] = LIMINE_REQUESTS_END_MARKER;
+static volatile uint64_t limine_requests_end_marker[] = { 0xadc0e0531bb10d03, 0x9572709f31764c62 };
 
 static void hcf(void) {
     for (;;) {
@@ -54,17 +48,12 @@ static uint64_t get_delta_cycles(void) {
 }
 
 void kmain(void) {
-    if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
+    if (limine_base_revision[2] == 0) {
         hcf();
     }
 
     if (framebuffer_request.response == NULL ||
         framebuffer_request.response->framebuffer_count < 1) {
-        hcf();
-    }
-
-    if (tsc_request.response == NULL ||
-        tsc_request.response->frequency == 0) {
         hcf();
     }
 
@@ -76,21 +65,15 @@ void kmain(void) {
         hcf();
     }
 
-    
     last_time = rdtsc();
 
-    
     keyboard_init();
 
-    
     for (;;) {
         uint64_t delta_cycles = get_delta_cycles();
-        uint64_t tsc_freq = tsc_request.response->frequency;
 
-        
         keyboard_poll();
 
-        
         static bool f1_was_pressed = false;
         bool f1_is_pressed = key_f1_pressed();
         if (f1_is_pressed && !f1_was_pressed) {
@@ -98,10 +81,7 @@ void kmain(void) {
         }
         f1_was_pressed = f1_is_pressed;
 
-        
-        fb_pattern(framebuffer, delta_cycles, tsc_freq);
-
-        
+        fb_pattern(framebuffer, delta_cycles, 0);
     }
 
     hcf();
